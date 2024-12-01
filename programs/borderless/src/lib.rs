@@ -228,7 +228,7 @@ pub struct TransferDirect<'info> {
     pub sender: Signer<'info>,
     
     /// CHECK:
-    // #[account(mut)]
+    #[account(mut)]
     pub receiver: UncheckedAccount<'info>,
 
     pub mint: Box<InterfaceAccount<'info, Mint>>,
@@ -240,25 +240,25 @@ pub struct TransferDirect<'info> {
     //     associated_token::authority = sender,
     // )]
     #[account(mut)]
-    pub sender_token_account: InterfaceAccount<'info, TokenAccount>,
+    pub sender_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     
-    // #[account(
-    //     init_if_needed,
-    //     payer = admin,
-    //     associated_token::mint = mint,
-    //     associated_token::authority = receiver,
-    // )]
-    #[account(mut)]
-    pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+        init_if_needed,
+        payer = admin,
+        associated_token::mint = mint,
+        associated_token::authority = receiver,
+    )]
+    // #[account(mut)]
+    pub receiver_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     
-    // #[account(
-    //     init_if_needed,
-    //     payer = admin,
-    //     associated_token::mint = mint,
-    //     associated_token::authority = admin,
-    // )]
-    #[account(mut)]
-    pub platform_token_account: InterfaceAccount<'info, TokenAccount>,
+    #[account(
+        init_if_needed,
+        payer = admin,
+        associated_token::mint = mint,
+        associated_token::authority = admin,
+    )]
+    // #[account(mut)]
+    pub platform_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
     pub system_program: Program<'info, System>,
     

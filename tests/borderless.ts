@@ -124,16 +124,6 @@ describe("borderless", () => {
       tokenMint,
       TOKEN_PROGRAM_ID
     );
-    const receiverTokenAccount = await createAndGetTokenAccount(
-      receiverPublicKey,
-      tokenMint,
-      TOKEN_PROGRAM_ID
-    );
-    const platformTokenAccount = await createAndGetTokenAccount(
-      adminPublicKey,
-      tokenMint,
-      TOKEN_PROGRAM_ID
-    );
     await mintTo(
       connection,
       adminKeypair,
@@ -145,6 +135,17 @@ describe("borderless", () => {
       { skipPreflight: true },
       TOKEN_PROGRAM_ID
     );
+    const receiverTokenAccount = await createAndGetTokenAccount(
+      receiverPublicKey,
+      tokenMint,
+      TOKEN_PROGRAM_ID
+    );
+    const platformTokenAccount = await createAndGetTokenAccount(
+      adminPublicKey,
+      tokenMint,
+      TOKEN_PROGRAM_ID
+    );
+    await sleep(5000);
     let txHash = await program.rpc.transferDirect(
       new anchor.BN(0.1 * LAMPORTS_PER_SOL),
       {accounts: {
