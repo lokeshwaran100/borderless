@@ -7,11 +7,14 @@ skip-lint = false
 [programs.localnet]
 borderless = "DKbHWxgtxsiN7SKsn7qBMgHL6ZjYGoZo6bZd5xK2YXSM"
 
+[programs.devnet]
+borderless = "DKbHWxgtxsiN7SKsn7qBMgHL6ZjYGoZo6bZd5xK2YXSM"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "/root/.config/solana/id.json"
 
 [scripts]
