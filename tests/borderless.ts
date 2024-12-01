@@ -24,13 +24,19 @@ describe("borderless", () => {
   const SYSTEM_PROGRAM_ID = anchor.web3.SystemProgram.programId;
   const ANCHOR_PROGRAM_ID = program.programId;
   // const TOKEN_MINT = new PublicKey("So11111111111111111111111111111111111111112");
-  const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+  // const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
   const ORCA_WHIRLPOOL_PROGRAM_ID = new anchor.web3.PublicKey("whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc");
   const ORCA_WHIRLPOOLS_CONFIG = new anchor.web3.PublicKey("FcrweFY1G9HJAHG5inkGB6pKg1HZ6x9UC2WioAfWrGkR");
-  // let tokenMint = null;
-  // const tokenMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"); // Mainnet USDC
-  // let tokenMint = new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"); // Devnet USDC-dev
-  let tokenMint = new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"); // Devnet Orca USDC
+  // // let tokenMint = null;
+  // // const tokenMint = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"); // Mainnet USDC
+  // // let tokenMint = new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"); // Devnet USDC-dev
+  // let tokenMint = new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"); // Devnet Orca USDC
+
+  const SOL = {mint: new PublicKey("So11111111111111111111111111111111111111112"), decimals: 9};
+  // const SOL = {mint: new PublicKey("4ShvTPQ3jYZzwUpxoQFSCDZxLtxQYNPUfeL3sR9mzLjJ"), decimals: 9};
+  // const USDC = {mint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6};
+  // const USDC = {mint: new PublicKey("9eKgmUSfTkQLRBvowV9zjY3BbhAQVaGSw1jfon5UwUJM"), decimals: 6};
+  const USDC = {mint: new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"), decimals: 6};
 
   const adminKeypair = (provider.wallet as anchor.Wallet).payer;
   const adminPublicKey = adminKeypair.publicKey;
@@ -66,9 +72,6 @@ describe("borderless", () => {
   ));
   // const receiverKeypair = anchor.web3.Keypair.generate();
   const receiverPublicKey = receiverKeypair.publicKey;
-  
-  const mintKeypair = anchor.web3.Keypair.generate();
-  const mintPublicKey = mintKeypair.publicKey;
 
   const [borderlessStatePdaAccount] = PublicKey.findProgramAddressSync(
     [
@@ -77,28 +80,28 @@ describe("borderless", () => {
     ANCHOR_PROGRAM_ID
   );
 
+  console.log("ANCHOR_PROGRAM_ID:", ANCHOR_PROGRAM_ID.toString());
   console.log("adminPublicKey:", adminPublicKey.toString());
   console.log("senderPublicKey:", senderPublicKey.toString());
   console.log("receiverPublicKey:", receiverPublicKey.toString());
-  console.log("ANCHOR_PROGRAM_ID:", ANCHOR_PROGRAM_ID.toString());
-  // console.log("TOKEN_MINT:", TOKEN_MINT.toString());
-  console.log("SOL_MINT:", SOL_MINT.toString());
+  console.log("SOL:", SOL.mint.toString());
+  console.log("USDC:", USDC.mint.toString());
   console.log("borderlessStatePdaAccount:", borderlessStatePdaAccount.toString());
 
-  // it("Initialize!", async () => {
-  //   const txHash = await initialize();
-  //   console.log("initialize", txHash);
-  // });
+  it("Uninitialize!", async () => {
+    const txHash = await uninitialize();
+    console.log("uninitialize", txHash);
+  });
 
-  // it("Uninitialize!", async () => {
-  //   const txHash = await uninitialize();
-  //   console.log("uninitialize", txHash);
-  // });
+  it("Initialize!", async () => {
+    const txHash = await initialize();
+    console.log("initialize", txHash);
+  });
 
-  // it("transferDirect!", async () => {
-  //   const txHash = await transferDirect();
-  //   console.log("transferDirect", txHash);
-  // });
+  it("transferDirect!", async () => {
+    const txHash = await transferDirect();
+    console.log("transferDirect", txHash);
+  });
 
   it("transferWithSwap!", async () => {
     const txHash = await transferWithSwap();
@@ -106,22 +109,9 @@ describe("borderless", () => {
   });
 
   async function initialize() {
-    
-    // await requestAirdrop(mintPublicKey);
-    // await requestAirdrop(senderPublicKey);
-    // await requestAirdrop(receiverPublicKey);
-
-    // tokenMint = await createMint(
-    //   connection,
-    //   mintKeypair,
-    //   mintPublicKey,
-    //   null,
-    //   9
-    // );
-
     const platformTokenAccount = await createAndGetTokenAccount(
       adminPublicKey,
-      tokenMint,
+      USDC.mint,
       TOKEN_PROGRAM_ID
     );
 
@@ -156,39 +146,28 @@ describe("borderless", () => {
   async function transferDirect() {
     const senderTokenAccount = await createAndGetTokenAccount(
       senderPublicKey,
-      tokenMint,
-      TOKEN_PROGRAM_ID
-    );
-    await mintTo(
-      connection,
-      adminKeypair,
-      tokenMint,
-      senderTokenAccount,
-      mintKeypair,
-      100_000_000_000_000,
-      [],
-      { skipPreflight: true },
+      USDC.mint,
       TOKEN_PROGRAM_ID
     );
     const receiverTokenAccount = await createAndGetTokenAccount(
       receiverPublicKey,
-      tokenMint,
+      USDC.mint,
       TOKEN_PROGRAM_ID
     );
     const platformTokenAccount = await createAndGetTokenAccount(
       adminPublicKey,
-      tokenMint,
+      USDC.mint,
       TOKEN_PROGRAM_ID
     );
-    await sleep(5000);
+    // await sleep(5000);
     let txHash = await program.rpc.transferDirect(
-      new anchor.BN(0.1 * LAMPORTS_PER_SOL),
+      new anchor.BN(0.1 * 10**6),
       {accounts: {
         state: borderlessStatePdaAccount,
         admin: adminPublicKey,
         sender: senderPublicKey,
         receiver: receiverPublicKey,
-        mint: tokenMint,
+        mint: USDC.mint,
         senderTokenAccount: senderTokenAccount,
         receiverTokenAccount: receiverTokenAccount,
         platformTokenAccount: platformTokenAccount,
@@ -198,61 +177,39 @@ describe("borderless", () => {
       },
       signers: [senderKeypair, adminKeypair],
     });
-    // await displayPda();
+    await displayPda();
     return txHash;
   }
 
   async function transferWithSwap() {
-    console.log("Trace 1")
     const senderWsolAccount = await createAndGetTokenAccount(
       senderPublicKey,
-      SOL_MINT,
+      SOL.mint,
       TOKEN_PROGRAM_ID
     );
-    console.log("Trace 2")
     const senderTokenAccount = await createAndGetTokenAccount(
       senderPublicKey,
-      tokenMint,
+      USDC.mint,
       TOKEN_PROGRAM_ID
     );
-    console.log("Trace 3")
     const receiverTokenAccount = await createAndGetTokenAccount(
       receiverPublicKey,
-      tokenMint,
+      USDC.mint,
       TOKEN_PROGRAM_ID
     );
-    console.log("Trace 4")
     const platformTokenAccount = await createAndGetTokenAccount(
       adminPublicKey,
-      tokenMint,
+      USDC.mint,
       TOKEN_PROGRAM_ID
     );
-    console.log("Trace 5")
-    await sleep(5000);
-    console.log("Trace 6")
+    // await sleep(5000);
     
-    const SOL = {mint: new PublicKey("So11111111111111111111111111111111111111112"), decimals: 9};
-    // const SOL = {mint: new PublicKey("4ShvTPQ3jYZzwUpxoQFSCDZxLtxQYNPUfeL3sR9mzLjJ"), decimals: 9};
-    // const USDC = {mint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), decimals: 6};
-    // const USDC = {mint: new PublicKey("9eKgmUSfTkQLRBvowV9zjY3BbhAQVaGSw1jfon5UwUJM"), decimals: 6};
-    const USDC = {mint: new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"), decimals: 6};
     const sol_usdc_whirlpool_pubkey = PDAUtil.getWhirlpool(ORCA_WHIRLPOOL_PROGRAM_ID, ORCA_WHIRLPOOLS_CONFIG, SOL.mint, USDC.mint, 64).publicKey;
-
     const whirlpool_ctx = WhirlpoolContext.withProvider(provider, ORCA_WHIRLPOOL_PROGRAM_ID);
     const fetcher = whirlpool_ctx.fetcher;
     const sol_usdc_whirlpool_oracle_pubkey = PDAUtil.getOracle(ORCA_WHIRLPOOL_PROGRAM_ID, sol_usdc_whirlpool_pubkey).publicKey;
     const sol_usdc_whirlpool = await fetcher.getPool(sol_usdc_whirlpool_pubkey);
 
-    const sol_input = DecimalUtil.toBN(DecimalUtil.fromNumber(0.1 /* SOL */), SOL.decimals);
-    console.log("sol_input: ", sol_input.toString())
-    const wallet = senderKeypair;
-    const rent_ta = async () => { return connection.getMinimumBalanceForRentExemption(AccountLayout.span) }
-    const wsol_ta = await resolveOrCreateATA(connection, wallet.publicKey, SOL.mint, rent_ta, sol_input);
-    const usdc_ta = await resolveOrCreateATA(connection, wallet.publicKey, USDC.mint, rent_ta);
-
-    const amount = new anchor.BN(sol_input);
-    const other_amount_threshold = new anchor.BN(0);
-    const amount_specified_is_input = true;
     const a_to_b = true;
     const sqrt_price_limit = SwapUtils.getDefaultSqrtPriceLimit(a_to_b);
     
@@ -263,15 +220,6 @@ describe("borderless", () => {
       ORCA_WHIRLPOOL_PROGRAM_ID,
       sol_usdc_whirlpool_pubkey
     );
-    console.log("Trace 7")
-
-    console.log("tickarrays[0]", tickarrays[0].toString());
-    console.log("tickarrays[1]", tickarrays[1].toString());
-    console.log("tickarrays[2]", tickarrays[2].toString());
-    console.log("wsol_ta.address", wsol_ta.address.toString());
-    console.log("senderWsolAccount", senderWsolAccount.toString());
-    console.log("usdc_ta.address", usdc_ta.address.toString());
-    console.log("senderTokenAccount", senderTokenAccount.toString());
 
     let txHash = await program.rpc.transferWithSwap(
       new anchor.BN(0.1 * LAMPORTS_PER_SOL),
@@ -289,13 +237,10 @@ describe("borderless", () => {
         associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
         whirlpoolProgram: ORCA_WHIRLPOOL_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
-        // tokenAuthority: senderPublicKey,
         whirlpool: sol_usdc_whirlpool_pubkey,
         tokenOwnerAccountA: senderWsolAccount,
-        // tokenOwnerAccountA: wsol_ta.address,
         tokenVaultA: sol_usdc_whirlpool.tokenVaultA,
         tokenOwnerAccountB: senderTokenAccount,
-        // tokenOwnerAccountB: usdc_ta.address,
         tokenVaultB: sol_usdc_whirlpool.tokenVaultB,
         tickArray0: tickarrays[0],
         tickArray1: tickarrays[1],
@@ -304,7 +249,7 @@ describe("borderless", () => {
       },
       signers: [senderKeypair, adminKeypair],
     });
-    // await displayPda();
+    await displayPda();
     return txHash;
   }
 
@@ -354,8 +299,8 @@ describe("borderless", () => {
       return tokenAccount;
   }
 
-  async function requestAirdrop(publicKey: PublicKey) {
-    const signature = await connection.requestAirdrop(publicKey, 10 * LAMPORTS_PER_SOL);
+  async function requestAirdrop(publicKey: PublicKey, amount: number) {
+    const signature = await connection.requestAirdrop(publicKey, amount * LAMPORTS_PER_SOL);
       await connection.confirmTransaction(signature);
       await sleep(5000);
   }

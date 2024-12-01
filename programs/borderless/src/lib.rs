@@ -93,13 +93,10 @@ pub mod borderless {
     ) -> Result<()> {
         let state = &mut ctx.accounts.state;
         let platform_token_account = ctx.accounts.platform_token_account.key();
-        // require!(
-        //     state.platform_usdc_account == platform_token_account ||
-        //     state.platform_usdt_account == platform_token_account,
-        //     ErrorCode::IncorrectPlatformWallet);
-
-        let platform_fee = (amount * state.platform_fee_per_10000) / 10000;
-        let receiver_amount = amount - platform_fee;
+        require!(
+            state.platform_usdc_account == platform_token_account ||
+            state.platform_usdt_account == platform_token_account,
+            ErrorCode::IncorrectPlatformWallet);
 
         let current_balance_wsol = ctx.accounts.token_owner_account_a.amount;
 		if amount > current_balance_wsol {
@@ -126,7 +123,6 @@ pub mod borderless {
                 },
             ))?;
 		}
-        // msg!("tick_current_index: {}", ctx.accounts.whirlpool.tick_current_index);
 
         // Swap the token
         // let sqrt_price_limit = orca_whirlpools_core::invert_sqrt_price(0);
@@ -149,31 +145,34 @@ pub mod borderless {
             .amount_specified_is_input(true)
             .invoke()?;
 
-        // // Transfer platform fee
-        // token::transfer(
-        //     CpiContext::new(
-        //         ctx.accounts.token_program.to_account_info(),
-        //         token::Transfer {
-        //             from: ctx.accounts.token_owner_account_b.to_account_info(),
-        //             to: ctx.accounts.platform_token_account.to_account_info(),
-        //             authority: ctx.accounts.sender.to_account_info(),
-        //         }
-        //     ),
-        //     platform_fee
-        // )?;
+        let current_balance_usdc = ctx.accounts.token_owner_account_b.amount;
+        let platform_fee = (current_balance_usdc * state.platform_fee_per_10000) / 10000;
+        let receiver_amount = current_balance_usdc - platform_fee;
+        // Transfer platform fee
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from: ctx.accounts.token_owner_account_b.to_account_info(),
+                    to: ctx.accounts.platform_token_account.to_account_info(),
+                    authority: ctx.accounts.sender.to_account_info(),
+                }
+            ),
+            platform_fee
+        )?;
 
-        // // Transfer remaining to receiver
-        // token::transfer(
-        //     CpiContext::new(
-        //         ctx.accounts.token_program.to_account_info(),
-        //         token::Transfer {
-        //             from: ctx.accounts.token_owner_account_b.to_account_info(),
-        //             to: ctx.accounts.receiver_token_account.to_account_info(),
-        //             authority: ctx.accounts.sender.to_account_info(),
-        //         }
-        //     ),
-        //     receiver_amount
-        // )?;
+        // Transfer remaining to receiver
+        token::transfer(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                token::Transfer {
+                    from: ctx.accounts.token_owner_account_b.to_account_info(),
+                    to: ctx.accounts.receiver_token_account.to_account_info(),
+                    authority: ctx.accounts.sender.to_account_info(),
+                }
+            ),
+            receiver_amount
+        )?;
 
         Ok(())
     }
