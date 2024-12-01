@@ -49,10 +49,10 @@ pub mod borderless {
         amount: u64,
     ) -> Result<()> {
         let state = &mut ctx.accounts.state;
-        let platform_wallet_account = ctx.accounts.platform_wallet_account.key();
+        let platform_token_account = ctx.accounts.platform_token_account.key();
         require!(
-            state.platform_usdc_account == platform_wallet_account ||
-            state.platform_usdt_account == platform_wallet_account,
+            state.platform_usdc_account == platform_token_account ||
+            state.platform_usdt_account == platform_token_account,
             ErrorCode::IncorrectPlatformWallet);
 
         let platform_fee = (amount * state.platform_fee_per_10000) / 10000;
@@ -64,7 +64,7 @@ pub mod borderless {
                 ctx.accounts.token_program.to_account_info(),
                 token::Transfer {
                     from: ctx.accounts.sender_token_account.to_account_info(),
-                    to: ctx.accounts.platform_wallet_account.to_account_info(),
+                    to: ctx.accounts.platform_token_account.to_account_info(),
                     authority: ctx.accounts.sender.to_account_info(),
                 }
             ),
@@ -92,10 +92,10 @@ pub mod borderless {
         amount: u64,
     ) -> Result<()> {
         let state = &mut ctx.accounts.state;
-        let platform_wallet_account = ctx.accounts.platform_wallet_account.key();
+        let platform_token_account = ctx.accounts.platform_token_account.key();
         require!(
-            state.platform_usdc_account == platform_wallet_account ||
-            state.platform_usdt_account == platform_wallet_account,
+            state.platform_usdc_account == platform_token_account ||
+            state.platform_usdt_account == platform_token_account,
             ErrorCode::IncorrectPlatformWallet);
 
         let platform_fee = (amount * state.platform_fee_per_10000) / 10000;
@@ -154,7 +154,7 @@ pub mod borderless {
                 ctx.accounts.token_program.to_account_info(),
                 token::Transfer {
                     from: ctx.accounts.token_owner_account_b.to_account_info(),
-                    to: ctx.accounts.platform_wallet_account.to_account_info(),
+                    to: ctx.accounts.platform_token_account.to_account_info(),
                     authority: ctx.accounts.sender.to_account_info(),
                 }
             ),
@@ -222,18 +222,49 @@ pub struct TransferDirect<'info> {
     pub state: Account<'info, BorderlessState>,
     
     #[account(mut)]
+    pub admin: Signer<'info>,
+    
+    #[account(mut)]
     pub sender: Signer<'info>,
     
+    /// CHECK:
+    // #[account(mut)]
+    pub receiver: UncheckedAccount<'info>,
+
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
+    
+    // #[account(
+    //     init_if_needed,
+    //     payer = admin,
+    //     associated_token::mint = mint,
+    //     associated_token::authority = sender,
+    // )]
     #[account(mut)]
     pub sender_token_account: InterfaceAccount<'info, TokenAccount>,
     
+    // #[account(
+    //     init_if_needed,
+    //     payer = admin,
+    //     associated_token::mint = mint,
+    //     associated_token::authority = receiver,
+    // )]
     #[account(mut)]
     pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
     
+    // #[account(
+    //     init_if_needed,
+    //     payer = admin,
+    //     associated_token::mint = mint,
+    //     associated_token::authority = admin,
+    // )]
     #[account(mut)]
-    pub platform_wallet_account: InterfaceAccount<'info, TokenAccount>,
+    pub platform_token_account: InterfaceAccount<'info, TokenAccount>,
+
+    pub system_program: Program<'info, System>,
     
     pub token_program: Program<'info, Token>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
 }
 
 #[derive(Accounts)]
@@ -252,7 +283,7 @@ pub struct TransferWithSwap<'info> {
     pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
 
     #[account(mut)]
-    pub platform_wallet_account: InterfaceAccount<'info, TokenAccount>,
+    pub platform_token_account: InterfaceAccount<'info, TokenAccount>,
 
     pub token_mint_a: Box<InterfaceAccount<'info, Mint>>,
 

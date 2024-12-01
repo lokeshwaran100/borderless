@@ -2,6 +2,9 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Borderless } from "../target/types/borderless";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { createAssociatedTokenAccount, createMint, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { sleep } from "@raydium-io/raydium-sdk-v2";
+import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
 describe("borderless", () => {
   const provider = anchor.AnchorProvider.env();
@@ -13,6 +16,8 @@ describe("borderless", () => {
   const ANCHOR_PROGRAM_ID = program.programId;
   const TOKEN_MINT = new PublicKey("So11111111111111111111111111111111111111112");
   const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+  const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+  let tokenMint = null;
 
   const adminKeypair = (provider.wallet as anchor.Wallet).payer;
   const adminPublicKey = adminKeypair.publicKey;
@@ -29,6 +34,12 @@ describe("borderless", () => {
   // const senderKeypair = anchor.web3.Keypair.fromSecretKey(secretKey);
   const senderKeypair = anchor.web3.Keypair.generate();
   const senderPublicKey = senderKeypair.publicKey;
+  
+  const receiverKeypair = anchor.web3.Keypair.generate();
+  const receiverPublicKey = receiverKeypair.publicKey;
+  
+  const mintKeypair = anchor.web3.Keypair.generate();
+  const mintPublicKey = mintKeypair.publicKey;
 
   const [borderlessStatePdaAccount] = PublicKey.findProgramAddressSync(
     [
@@ -49,17 +60,39 @@ describe("borderless", () => {
     console.log("initialize", txHash);
   });
 
-  it("Uninitialize!", async () => {
-    const txHash = await uninitialize();
-    console.log("uninitialize", txHash);
+  // it("Uninitialize!", async () => {
+  //   const txHash = await uninitialize();
+  //   console.log("uninitialize", txHash);
+  // });
+
+  it("transferDirect!", async () => {
+    const txHash = await transferDirect();
+    console.log("transferDirect", txHash);
   });
 
-  
-
   async function initialize() {
+    
+    await requestAirdrop(mintPublicKey);
+    await requestAirdrop(senderPublicKey);
+    await requestAirdrop(receiverPublicKey);
+
+    tokenMint = await createMint(
+      connection,
+      mintKeypair,
+      mintPublicKey,
+      null,
+      9
+    );
+
+    const platformTokenAccount = await createAndGetTokenAccount(
+      adminPublicKey,
+      tokenMint,
+      TOKEN_PROGRAM_ID
+    );
+
     let txHash = await program.rpc.initialize(
-      adminPublicKey,
-      adminPublicKey,
+      platformTokenAccount,
+      platformTokenAccount,
       new anchor.BN(100),
       {accounts: {
         admin: adminPublicKey,
@@ -84,7 +117,54 @@ describe("borderless", () => {
     // await displayPda();
     return txHash;
   }
-  
+
+  async function transferDirect() {
+    const senderTokenAccount = await createAndGetTokenAccount(
+      senderPublicKey,
+      tokenMint,
+      TOKEN_PROGRAM_ID
+    );
+    const receiverTokenAccount = await createAndGetTokenAccount(
+      receiverPublicKey,
+      tokenMint,
+      TOKEN_PROGRAM_ID
+    );
+    const platformTokenAccount = await createAndGetTokenAccount(
+      adminPublicKey,
+      tokenMint,
+      TOKEN_PROGRAM_ID
+    );
+    await mintTo(
+      connection,
+      adminKeypair,
+      tokenMint,
+      senderTokenAccount,
+      mintKeypair,
+      100_000_000_000_000,
+      [],
+      { skipPreflight: true },
+      TOKEN_PROGRAM_ID
+    );
+    let txHash = await program.rpc.transferDirect(
+      new anchor.BN(0.1 * LAMPORTS_PER_SOL),
+      {accounts: {
+        state: borderlessStatePdaAccount,
+        admin: adminPublicKey,
+        sender: senderPublicKey,
+        receiver: receiverPublicKey,
+        mint: tokenMint,
+        senderTokenAccount: senderTokenAccount,
+        receiverTokenAccount: receiverTokenAccount,
+        platformTokenAccount: platformTokenAccount,
+        systemProgram: SYSTEM_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_PROGRAM_ID
+      },
+      signers: [senderKeypair, adminKeypair],
+    });
+    // await displayPda();
+    return txHash;
+  }
 
   async function displayPda() {
     const pda_account = await program.account.borderlessState.fetch(
@@ -103,6 +183,39 @@ describe("borderless", () => {
       "Sender Balance       : ",
       await connection.getBalance(senderPublicKey)
     );
+  }
+
+  async function createAndGetTokenAccount(
+      publicKey: anchor.web3.PublicKey,
+      tokenMint: anchor.web3.PublicKey,
+      tokenProgramId: anchor.web3.PublicKey
+  ) {
+      const tokenList = await program.provider.connection.getTokenAccountsByOwner(
+          publicKey,
+          { mint: tokenMint, programId: tokenProgramId }
+      );
+
+      let tokenAccount = null;
+      if (tokenList.value.length > 0) {
+        tokenAccount = tokenList.value[0].pubkey;
+      } else {
+          // Create associated token accounts for the new accounts
+          tokenAccount = await createAssociatedTokenAccount(
+              connection,
+              adminKeypair,
+              tokenMint,
+              publicKey,
+              null,
+              tokenProgramId
+          );
+      }
+      return tokenAccount;
+  }
+
+  async function requestAirdrop(publicKey: PublicKey) {
+    const signature = await connection.requestAirdrop(publicKey, 10 * LAMPORTS_PER_SOL);
+      await connection.confirmTransaction(signature);
+      await sleep(5000);
   }
 
 });
