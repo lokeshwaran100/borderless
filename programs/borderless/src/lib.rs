@@ -56,7 +56,6 @@ pub mod borderless {
             ErrorCode::IncorrectPlatformWallet);
 
         let platform_fee = (amount * state.platform_fee_per_10000) / 10000;
-        let receiver_amount = amount - platform_fee;
 
         // Transfer platform fee
         token::transfer(
@@ -81,7 +80,7 @@ pub mod borderless {
                     authority: ctx.accounts.sender.to_account_info(),
                 }
             ),
-            receiver_amount
+            amount
         )?;
 
         Ok(())
@@ -221,24 +220,15 @@ pub struct TransferDirect<'info> {
     )]
     pub state: Account<'info, BorderlessState>,
     
-    #[account(mut)]
     pub admin: Signer<'info>,
     
-    #[account(mut)]
     pub sender: Signer<'info>,
     
     /// CHECK:
-    #[account(mut)]
     pub receiver: UncheckedAccount<'info>,
 
     pub mint: Box<InterfaceAccount<'info, Mint>>,
     
-    // #[account(
-    //     init_if_needed,
-    //     payer = admin,
-    //     associated_token::mint = mint,
-    //     associated_token::authority = sender,
-    // )]
     #[account(mut)]
     pub sender_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     
@@ -248,7 +238,6 @@ pub struct TransferDirect<'info> {
         associated_token::mint = mint,
         associated_token::authority = receiver,
     )]
-    // #[account(mut)]
     pub receiver_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
     
     #[account(
@@ -257,7 +246,6 @@ pub struct TransferDirect<'info> {
         associated_token::mint = mint,
         associated_token::authority = admin,
     )]
-    // #[account(mut)]
     pub platform_token_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
     pub system_program: Program<'info, System>,
