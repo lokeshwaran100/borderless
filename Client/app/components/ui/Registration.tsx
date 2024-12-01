@@ -9,11 +9,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { Wallet2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { signIn } from 'next-auth/react';
 
 const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().regex(/^\+?[1-9]\d{9,11}$/, 'Invalid phone number'),
+  phone: z.string().regex(/^\d{10}$/, 'Must be a 10-digit number'),
+  recieveToken: z.enum(['USDC', 'USDT']),
 });
 
 export function RegistrationForm() {
@@ -21,16 +23,40 @@ export function RegistrationForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
       name: '',
       phone: '',
+      recieveToken: 'USDC',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you would handle registration here
-    console.log(values);
-    router.push('/dashboard');
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const response = await fetch('http://localhost:3000/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: values.name,
+          phone: parseInt(values.phone),
+          oktoId: 'default',
+          recieveToken: values.recieveToken,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
+
+      // Wait for Google sign-in to complete
+      const result = await signIn("google", {
+        redirect: false, 
+        callbackUrl: '/' 
+      });
+
+    } catch (error) {
+      console.error('Registration error:', error);
+    }
   }
 
   return (
@@ -47,19 +73,6 @@ export function RegistrationForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="you@example.com" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="name"
@@ -80,13 +93,34 @@ export function RegistrationForm() {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="+1234567890" {...field} />
+                    <Input placeholder="1234567890" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">Register</Button>
+            <FormField
+              control={form.control}
+              name="recieveToken"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred Token</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select token" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="USDC">USDC</SelectItem>
+                      <SelectItem value="USDT">USDT</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full">Connect With Google</Button>
           </form>
         </Form>
       </CardContent>

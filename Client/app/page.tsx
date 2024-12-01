@@ -99,7 +99,6 @@ export default function Home() {
       </div> */}
 
       <div className="grid grid-cols-2 gap-4 w-full max-w-lg mt-8">
-        <LoginButton />
 {/* 
         <GetButton title="Okto Authenticate" apiFn={handleAuthenticate} />
         <AuthButton authenticateWithUserId={authenticateWithUserId}/>

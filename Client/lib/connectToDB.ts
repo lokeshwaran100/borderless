@@ -1,11 +1,27 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-export async function connectToDB() {
-    try {
-        await mongoose.connect(process.env.MONGODB_URI!);
-    } catch (error) {
-        console.error('Error connecting to MongoDB:', error);
-        throw error;
+let isConnected:boolean=false;
+
+export const connectToDB=async()=>{
+    mongoose.set('strictQuery',true);
+    const mongoDB=String(process.env.MONGODB_URI);
+    console.log(mongoDB);    
+    if(!mongoDB)
+    {
+        return console.log("the mongoDb uri is not defined");
+    }
+    if(isConnected)
+    {
+        console.log("using exisiting connection");
+    }
+    try{
+        await mongoose.connect(mongoDB);
+        isConnected=true;
+        console.log("MongoDB connected");
+    }
+    catch(err)
+    {
+        console.log(err); 
     }
 }
 
