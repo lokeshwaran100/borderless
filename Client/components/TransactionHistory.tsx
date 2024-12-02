@@ -55,7 +55,7 @@ export function TransactionHistory({ userId }: { userId: string }) {
             }`}>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">
-                  ₹{transaction.amount}
+                  {transaction.amount} {transaction.sendToken}
                 </span>
                 {transaction.status === 'done' && (
                   <Check className="h-4 w-4" />

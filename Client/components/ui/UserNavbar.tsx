@@ -52,13 +52,6 @@ export function UserNavbar({ userId }: { userId: string }) {
             <h1 className="text-lg font-semibold">{user.name}</h1>
             <p className="text-sm text-gray-400">{user.phone}</p>
           </div>
-
-          <button className="p-2 hover:bg-gray-800 rounded-full">
-            <Phone className="h-6 w-6" />
-          </button>
-          <button className="p-2 hover:bg-gray-800 rounded-full">
-            <MoreVertical className="h-6 w-6" />
-          </button>
         </div>
       </div>
     </div>

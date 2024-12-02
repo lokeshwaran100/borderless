@@ -11,11 +11,11 @@ import { signIn, signOut } from 'next-auth/react';
 const Navbar = () => {
   const { data: session } = useSession();
   return (
-    <header className="w-full top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100 from-blue-50 via-blue-100 to-blue-200">
+    <header className="w-full fixed top-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-100 from-blue-50 via-blue-100 to-blue-200">
       <NavigationMenu.Root className="flex justify-between w-full max-w-screen-xl mx-auto py-4 px-6">
         <div className="flex items-center gap-8">
           <Link href="/">
-            <div className="text-xl font-semibold text-gray-900">Pay App</div>
+            <div className="text-xl font-semibold text-gray-900">Borderless</div>
           </Link>
           {session && <SearchBar />}
         </div>

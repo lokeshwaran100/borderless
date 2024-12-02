@@ -161,7 +161,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <div className="h-[80vh] flex flex-col overflow-hidden bg-gradient-to-br from-violet-50/90 via-violet-100/80 to-violet-200/90 backdrop-blur-sm">
+      <div className="h-[90vh] flex flex-col overflow-hidden bg-gradient-to-br from-violet-50/90 via-violet-100/80 to-violet-200/90 backdrop-blur-sm ">
         <main className="flex-1">
           <div className="h-full p-12">
             {/* {session && <RecentContacts />} */}
