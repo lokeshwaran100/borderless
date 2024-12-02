@@ -8,6 +8,8 @@ import TransferTokens from "./components/TransferTokens";
 import { useAppContext } from "./components/AppContext";
 import AuthButton from "./components/AuthButton";
 import SendRawTransaction from "./components/SendRawTransaction";
+import { RecentContacts } from './components/RecentTransactions';
+import Navbar from "./components/ui/Navbar";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -72,32 +74,10 @@ export default function Home() {
   }, [isLoggedIn]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center space-y-6 p-12 bg-violet-200">
-      {/* <div className="text-black font-bold text-3xl mb-8">Okto SDK</div> */}
-      {/* <div className="space-y-6 w-full max-w-lg">
-        <div className="space-y-4">
-          <label className="text-black font-semibold">API Key:</label>
-          <input
-            type="text"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-gray-200 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="space-y-4">
-          <label className="text-black font-semibold">Build Type:</label>
-          <select
-            value={buildType}
-            onChange={(e) => setBuildType(e.target.value)}
-            className="w-full px-4 py-2 rounded bg-gray-200 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value={BuildType.SANDBOX}>Sandbox</option>
-            <option value={BuildType.STAGING}>Staging</option>
-            <option value={BuildType.PRODUCTION}>Production</option>
-          </select>
-        </div>
-      </div> */}
-
+    <>
+    <Navbar/>
+        <main className="flex min-h-screen flex-col items-center space-y-6 p-12 bg-violet-200">
+      {session && <RecentContacts />}
       <div className="grid grid-cols-2 gap-4 w-full max-w-lg mt-8">
 {/* 
         <GetButton title="Okto Authenticate" apiFn={handleAuthenticate} />
@@ -129,5 +109,6 @@ export default function Home() {
         <SendRawTransaction apiFn={executeRawTransaction} />
       </div> */}
     </main>
+    </>
   );
 }
