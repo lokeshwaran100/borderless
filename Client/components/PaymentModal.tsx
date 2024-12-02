@@ -4,6 +4,11 @@ import { useSession } from 'next-auth/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OktoContextType, useOkto } from 'okto-sdk-react';
+import { transferDirect } from './apiRequests';
+import { useAppContext } from '../app/components/AppContext';
+import * as anchor from "@coral-xyz/anchor";
+// import * as anchor from "@project-serum/anchor";
+// import { Program } from "@project-serum/anchor";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -15,19 +20,35 @@ export function PaymentModal({ isOpen, onClose, userId }: PaymentModalProps) {
   const [blockchain, setBlockchain] = useState('Ethereum');
   const [amount, setAmount] = useState('');
   const { data: session } = useSession();
-  const { executeRawTransaction, getWallets } = useOkto() as OktoContextType;
+  // const { executeRawTransaction, getWallets } = useOkto() as OktoContextType;
+
+  const {program, userPublicKey} = useAppContext();
   
   const [senderToken, setSenderToken] = useState("USDC");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Trace 1")
-    const wallets = await getWallets();
-    wallets.wallets.entries().map((wallet, index) => {
-      console.log(wallet)
-    })
+    // const wallets = await getWallets();
+    // wallets.wallets.entries().map((wallet, index) => {
+    //   console.log(wallet)
+    // })
 
-    
+    // getWallets()
+    // .then((result) => {
+    //     console.log(result)
+    // })
+    // .catch((error) => {
+    //     console.error(`error:`, error);
+    // });
+
+    const receiverPublicKey = new anchor.web3.PublicKey("J7kHHBb9PrER4ugR8f539em7BzUCEYmzuHfdEWHxxs3H")
+    if(!program || !userPublicKey) {
+      console.log("Trace Error")
+      return;
+    }
+    const txHash = await transferDirect(program, userPublicKey, receiverPublicKey, 0.1);
+
     try {
       const response = await fetch('/api/transactions', {
         method: 'POST',

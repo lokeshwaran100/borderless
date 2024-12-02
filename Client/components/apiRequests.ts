@@ -1,22 +1,24 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
+// import * as anchor from "@project-serum/anchor";
+// import { Program } from "@project-serum/anchor";
 // import { Borderless } from "../target/types/borderless";
-import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { AccountLayout, createAssociatedTokenAccount, createMint, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { Keypair, LAMPORTS_PER_SOL, PublicKey, } from "@solana/web3.js";
+import { AccountLayout, createAssociatedTokenAccount, createMint, mintTo, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import { sleep } from "@raydium-io/raydium-sdk-v2";
-import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+// import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
-import {
-  // ORCA_WHIRLPOOL_PROGRAM_ID, ORCA_WHIRLPOOLS_CONFIG,
-  PDAUtil, PriceMath, SwapUtils,
-  swapQuoteByInputToken, WhirlpoolContext, buildWhirlpoolClient,
-  increaseLiquidityQuoteByInputToken, decreaseLiquidityQuoteByLiquidity,
-  PoolUtil, IGNORE_CACHE, TickUtil,
-} from "@orca-so/whirlpools-sdk";
+// import {
+//   // ORCA_WHIRLPOOL_PROGRAM_ID, ORCA_WHIRLPOOLS_CONFIG,
+//   PDAUtil, PriceMath, SwapUtils,
+//   swapQuoteByInputToken, WhirlpoolContext, buildWhirlpoolClient,
+//   increaseLiquidityQuoteByInputToken, decreaseLiquidityQuoteByLiquidity,
+//   PoolUtil, IGNORE_CACHE, TickUtil,
+// } from "@orca-so/whirlpools-sdk";
 import { TransactionBuilder, resolveOrCreateATA, DecimalUtil, Percentage, Wallet, TransactionBuilderOptions } from "@orca-so/common-sdk";
 import idl from "../../target/idl/borderless.json";
-import dotenv from "dotenv";
-dotenv.config();
+// import dotenv from "dotenv";
+// dotenv.config();
 const bs58 = require('bs58');
 
 function getAdminKeypair() {
@@ -40,17 +42,17 @@ const getConnection = () => {
   return connection;
 };
 
-function getProgram() {
-  const connection = getConnection();
-  const programId = getProgramId();
-  const wallet = new anchor.Wallet(adminKeypair);
-  const provider = new anchor.AnchorProvider(connection, wallet, { preflightCommitment: "processed" });
-  const program = new anchor.Program(
-    JSON.parse(JSON.stringify(idl)),
-    provider,
-  );
-  return program;
-}
+// function getProgram() {
+//   const connection = getConnection();
+//   const programId = getProgramId();
+//   const wallet = new anchor.Wallet(adminKeypair);
+//   const provider = new anchor.AnchorProvider(connection, wallet, { preflightCommitment: "processed" });
+//   const program = new anchor.Program(
+//     JSON.parse(JSON.stringify(idl)),
+//     provider,
+//   );
+//   return program;
+// }
 
 function getBorderlessStatePda(programId: PublicKey) {
     const [borderlessStatePdaAccount] = PublicKey.findProgramAddressSync(
@@ -68,7 +70,7 @@ const ORCA_WHIRLPOOL_PROGRAM_ID = new anchor.web3.PublicKey("whirLbMiicVdio4qvUf
 const ORCA_WHIRLPOOLS_CONFIG = new anchor.web3.PublicKey("FcrweFY1G9HJAHG5inkGB6pKg1HZ6x9UC2WioAfWrGkR");
 const SOL = {mint: new PublicKey("So11111111111111111111111111111111111111112"), decimals: 9};
 const USDC = {mint: new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"), decimals: 6};
-const program = getProgram();
+// const program = getProgram();
 
 export async function initialize(program: anchor.Program) {
     const platformTokenAccount = await createAndGetTokenAccount(
@@ -107,11 +109,10 @@ export async function initialize(program: anchor.Program) {
   }
 
   export async function transferDirect(
-    // program: anchor.Program, 
+    program: anchor.Program, 
     senderPublicKey: PublicKey,
     receiverPublicKey: PublicKey,
-    amount: number,
-    senderKeypair?: Keypair) {
+    amount: number) {
     const senderTokenAccount = await createAndGetTokenAccount(
         program,
       senderPublicKey,
@@ -130,12 +131,12 @@ export async function initialize(program: anchor.Program) {
       USDC.mint,
       TOKEN_PROGRAM_ID
     );
-    if (!senderKeypair) {
-        return null;
-    }
-    let txHash = await program.rpc.transferDirect(
-      new anchor.BN(amount * 10**6),
-      {accounts: {
+    // if (!senderKeypair) {
+    //     return null;
+    // }
+    let txHash = await program.methods
+    .transferDirect(new anchor.BN(amount * 10**6))
+    .accounts( {
         state: getBorderlessStatePda(program.programId),
         admin: adminPublicKey,
         sender: senderPublicKey,
@@ -146,103 +147,120 @@ export async function initialize(program: anchor.Program) {
         platformTokenAccount: platformTokenAccount,
         systemProgram: SYSTEM_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID
-      },
-      signers: [senderKeypair, adminKeypair],
-    });
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
+      })
+      .signers([adminKeypair])
+      .rpc();
+    // let txHash = await program.rpc.transferDirect(
+    //   new anchor.BN(amount * 10**6),
+    //   {accounts: {
+    //     state: getBorderlessStatePda(program.programId),
+    //     admin: adminPublicKey,
+    //     sender: senderPublicKey,
+    //     receiver: receiverPublicKey,
+    //     mint: USDC.mint,
+    //     senderTokenAccount: senderTokenAccount,
+    //     receiverTokenAccount: receiverTokenAccount,
+    //     platformTokenAccount: platformTokenAccount,
+    //     systemProgram: SYSTEM_PROGRAM_ID,
+    //     tokenProgram: TOKEN_PROGRAM_ID,
+    //     associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
+    //   },
+    //   signers: [adminKeypair],
+    // });
     await displayPda(program);
     return txHash;
   }
 
-  export async function transferWithSwap(
-    // program: anchor.Program, 
-    senderPublicKey: PublicKey,
-    receiverPublicKey: PublicKey,
-    amount: number,
-    senderKeypair?: Keypair) {
-    const senderWsolAccount = await createAndGetTokenAccount(
-        program,
-      senderPublicKey,
-      SOL.mint,
-      TOKEN_PROGRAM_ID
-    );
-    const senderTokenAccount = await createAndGetTokenAccount(
-        program,
-      senderPublicKey,
-      USDC.mint,
-      TOKEN_PROGRAM_ID
-    );
-    const receiverTokenAccount = await createAndGetTokenAccount(
-        program,
-      receiverPublicKey,
-      USDC.mint,
-      TOKEN_PROGRAM_ID
-    );
-    const platformTokenAccount = await createAndGetTokenAccount(
-        program,
-      adminPublicKey,
-      USDC.mint,
-      TOKEN_PROGRAM_ID
-    );
+  // export async function transferWithSwap(
+  //   program: anchor.Program, 
+  //   senderPublicKey: PublicKey,
+  //   receiverPublicKey: PublicKey,
+  //   amount: number,
+  //   senderKeypair?: Keypair) {
+  //   const senderWsolAccount = await createAndGetTokenAccount(
+  //       program,
+  //     senderPublicKey,
+  //     SOL.mint,
+  //     TOKEN_PROGRAM_ID
+  //   );
+  //   const senderTokenAccount = await createAndGetTokenAccount(
+  //       program,
+  //     senderPublicKey,
+  //     USDC.mint,
+  //     TOKEN_PROGRAM_ID
+  //   );
+  //   const receiverTokenAccount = await createAndGetTokenAccount(
+  //       program,
+  //     receiverPublicKey,
+  //     USDC.mint,
+  //     TOKEN_PROGRAM_ID
+  //   );
+  //   const platformTokenAccount = await createAndGetTokenAccount(
+  //       program,
+  //     adminPublicKey,
+  //     USDC.mint,
+  //     TOKEN_PROGRAM_ID
+  //   );
     
-    const provider = anchor.AnchorProvider.env();
-    const sol_usdc_whirlpool_pubkey = PDAUtil.getWhirlpool(ORCA_WHIRLPOOL_PROGRAM_ID, ORCA_WHIRLPOOLS_CONFIG, SOL.mint, USDC.mint, 64).publicKey;
-    const whirlpool_ctx = WhirlpoolContext.withProvider(provider, ORCA_WHIRLPOOL_PROGRAM_ID);
-    const fetcher = whirlpool_ctx.fetcher;
-    const sol_usdc_whirlpool_oracle_pubkey = PDAUtil.getOracle(ORCA_WHIRLPOOL_PROGRAM_ID, sol_usdc_whirlpool_pubkey).publicKey;
-    const sol_usdc_whirlpool = await fetcher.getPool(sol_usdc_whirlpool_pubkey);
+  //   const provider = anchor.AnchorProvider.env();
+  //   const sol_usdc_whirlpool_pubkey = PDAUtil.getWhirlpool(ORCA_WHIRLPOOL_PROGRAM_ID, ORCA_WHIRLPOOLS_CONFIG, SOL.mint, USDC.mint, 64).publicKey;
+  //   const whirlpool_ctx = WhirlpoolContext.withProvider(provider, ORCA_WHIRLPOOL_PROGRAM_ID);
+  //   const fetcher = whirlpool_ctx.fetcher;
+  //   const sol_usdc_whirlpool_oracle_pubkey = PDAUtil.getOracle(ORCA_WHIRLPOOL_PROGRAM_ID, sol_usdc_whirlpool_pubkey).publicKey;
+  //   const sol_usdc_whirlpool = await fetcher.getPool(sol_usdc_whirlpool_pubkey);
 
-    const a_to_b = true;
-    const sqrt_price_limit = SwapUtils.getDefaultSqrtPriceLimit(a_to_b);
+  //   const a_to_b = true;
+  //   const sqrt_price_limit = SwapUtils.getDefaultSqrtPriceLimit(a_to_b);
 
-    if (!sol_usdc_whirlpool){
-        console.error("No pool available");
-        return null
-    }
+  //   if (!sol_usdc_whirlpool){
+  //       console.error("No pool available");
+  //       return null
+  //   }
     
-    const tickarrays = SwapUtils.getTickArrayPublicKeys(
-      sol_usdc_whirlpool.tickCurrentIndex,
-      sol_usdc_whirlpool.tickSpacing,
-      a_to_b,
-      ORCA_WHIRLPOOL_PROGRAM_ID,
-      sol_usdc_whirlpool_pubkey
-    );
+  //   const tickarrays = SwapUtils.getTickArrayPublicKeys(
+  //     sol_usdc_whirlpool.tickCurrentIndex,
+  //     sol_usdc_whirlpool.tickSpacing,
+  //     a_to_b,
+  //     ORCA_WHIRLPOOL_PROGRAM_ID,
+  //     sol_usdc_whirlpool_pubkey
+  //   );
 
-    if (!senderKeypair) {
-        return null;
-    }
+  //   if (!senderKeypair) {
+  //       return null;
+  //   }
 
-    let txHash = await program.rpc.transferWithSwap(
-      new anchor.BN(amount * LAMPORTS_PER_SOL),
-      sqrt_price_limit,
-      {accounts: {
-        state: getBorderlessStatePda(program.programId),
-        admin: adminPublicKey,
-        sender: senderPublicKey,
-        receiver: receiverPublicKey,
-        receiverTokenAccount: receiverTokenAccount,
-        platformTokenAccount: platformTokenAccount,
-        tokenMintA: SOL.mint,
-        tokenMintB: USDC.mint,
-        systemProgram: SYSTEM_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
-        whirlpoolProgram: ORCA_WHIRLPOOL_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        whirlpool: sol_usdc_whirlpool_pubkey,
-        tokenOwnerAccountA: senderWsolAccount,
-        tokenVaultA: sol_usdc_whirlpool.tokenVaultA,
-        tokenOwnerAccountB: senderTokenAccount,
-        tokenVaultB: sol_usdc_whirlpool.tokenVaultB,
-        tickArray0: tickarrays[0],
-        tickArray1: tickarrays[1],
-        tickArray2: tickarrays[2],
-        oracle:sol_usdc_whirlpool_oracle_pubkey
-      },
-      signers: [senderKeypair, adminKeypair],
-    });
-    await displayPda(program);
-    return txHash;
-  }
+  //   let txHash = await program.rpc.transferWithSwap(
+  //     new anchor.BN(amount * LAMPORTS_PER_SOL),
+  //     sqrt_price_limit,
+  //     {accounts: {
+  //       state: getBorderlessStatePda(program.programId),
+  //       admin: adminPublicKey,
+  //       sender: senderPublicKey,
+  //       receiver: receiverPublicKey,
+  //       receiverTokenAccount: receiverTokenAccount,
+  //       platformTokenAccount: platformTokenAccount,
+  //       tokenMintA: SOL.mint,
+  //       tokenMintB: USDC.mint,
+  //       systemProgram: SYSTEM_PROGRAM_ID,
+  //       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+  //       whirlpoolProgram: ORCA_WHIRLPOOL_PROGRAM_ID,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //       whirlpool: sol_usdc_whirlpool_pubkey,
+  //       tokenOwnerAccountA: senderWsolAccount,
+  //       tokenVaultA: sol_usdc_whirlpool.tokenVaultA,
+  //       tokenOwnerAccountB: senderTokenAccount,
+  //       tokenVaultB: sol_usdc_whirlpool.tokenVaultB,
+  //       tickArray0: tickarrays[0],
+  //       tickArray1: tickarrays[1],
+  //       tickArray2: tickarrays[2],
+  //       oracle:sol_usdc_whirlpool_oracle_pubkey
+  //     },
+  //     signers: [senderKeypair, adminKeypair],
+  //   });
+  //   await displayPda(program);
+  //   return txHash;
+  // }
 
   async function displayPda(program: anchor.Program) {
     const pda_account = await program.account.borderlessState.fetch(

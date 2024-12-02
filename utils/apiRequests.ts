@@ -2,9 +2,9 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Borderless } from "../target/types/borderless";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { AccountLayout, createAssociatedTokenAccount, createMint, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { AccountLayout, createAssociatedTokenAccount, createMint, mintTo, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { sleep } from "@raydium-io/raydium-sdk-v2";
-import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+// import { ASSOCIATED_TOKEN_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
 import {
   // ORCA_WHIRLPOOL_PROGRAM_ID, ORCA_WHIRLPOOLS_CONFIG,
@@ -124,7 +124,7 @@ export async function initialize(program: anchor.Program) {
         platformTokenAccount: platformTokenAccount,
         systemProgram: SYSTEM_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID
       },
       signers: [senderKeypair, adminKeypair],
     });
@@ -203,7 +203,7 @@ export async function initialize(program: anchor.Program) {
         tokenMintA: SOL.mint,
         tokenMintB: USDC.mint,
         systemProgram: SYSTEM_PROGRAM_ID,
-        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
         whirlpoolProgram: ORCA_WHIRLPOOL_PROGRAM_ID,
         tokenProgram: TOKEN_PROGRAM_ID,
         whirlpool: sol_usdc_whirlpool_pubkey,

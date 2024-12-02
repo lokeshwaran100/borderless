@@ -1,9 +1,16 @@
 "use client";
 import React from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import dynamic from "next/dynamic";
+
 
 export function LoginButton() {
   const { data: session } = useSession();
+
+  const WalletMultiButtonDynamic = dynamic(
+    async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+    { ssr: false }
+  );
 
   const handleSignin = async () => {
     if (session) {
@@ -20,14 +27,15 @@ export function LoginButton() {
 
   return (
     <div>
-      <button
+      {/* <button
         className={`border rounded px-4 py-2 ${
           session ? "bg-red-500 text-white" : "bg-blue-500 text-white"
         }`}
         onClick={handleSignin}
       >
         {session ? "Log Out" : "Google Log In"}
-      </button>
+      </button> */}
+      <WalletMultiButtonDynamic/>
     </div>
   );
 }
