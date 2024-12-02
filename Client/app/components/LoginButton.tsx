@@ -25,7 +25,7 @@ export function LoginButton() {
         }`}
         onClick={handleSignin}
       >
-        {session ? "Log Out" : "Google Log In"}
+        {session ? "Log Out" : "Log In"}
       </button>
     </div>
   );

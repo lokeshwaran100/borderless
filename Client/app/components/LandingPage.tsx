@@ -13,7 +13,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-[75vh] bg-gradient-to-br from-blue-50 via-blue-100 to-blue-200">
-      <div className="container mx-auto px-4 py-20">
+      <div className="container w-[88vw] mx-auto px-4 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
           <motion.div

@@ -24,6 +24,7 @@ export default function Home() {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const idToken = useMemo(() => (session?.id_token || null), [session]);
+  const [isAILoading, setIsAILoading] = useState(false);
   const setAuthToken = useAuthStore((state) => state.setAuthToken);
 
   useEffect(() => {
@@ -57,11 +58,12 @@ export default function Home() {
   }, [session, idToken]);
 
   const callChat = async (messageToSend: string) => {
+    setIsAILoading(true);
     try {
       setMessages((prev) => [
         ...prev,
         { id: prev.length + 1, text: messageToSend, sender: "user" },
-      ]);
+      ]); 
 
       const response2 = await fetch("/api/check-name-chat", {
         method: "POST",
@@ -73,7 +75,7 @@ export default function Home() {
 
       const data2 = await response2.json();
       console.log("RES ", data2);
-      const name = data2.parsedJson.name;
+      const name = data2.parsedJson?.name;
 
 
       let updatedMessage = "";
@@ -99,13 +101,27 @@ export default function Home() {
         }
       }
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: updatedMessage || messageToSend }),
-      });
+
+      let response;
+      if (updatedMessage) {
+        response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: updatedMessage  }),
+        });
+      } else {
+        response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: messageToSend  }),
+        });
+      }
+
+      
 
       const data = await response.json();
       console.log("API Response:", data);
@@ -123,12 +139,14 @@ export default function Home() {
         },
       ]);
 
+      setIsAILoading(false);
       if (data.parsedJson) {
         console.log("Parsed JSON:", data.parsedJson);
       }
     } catch (error) {
       console.error("Error in callChat:", error);
       // Optionally add error handling UI here
+      setIsAILoading(false);
     }
   };
 
@@ -143,10 +161,10 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <div className="h-[40vh] flex flex-col overflow-hidden bg-gradient-to-br from-violet-50/90 via-violet-100/80 to-violet-200/90 backdrop-blur-sm">
+      <div className="h-[80vh] flex flex-col overflow-hidden bg-gradient-to-br from-violet-50/90 via-violet-100/80 to-violet-200/90 backdrop-blur-sm">
         <main className="flex-1">
           <div className="h-full p-12">
-            {session && <RecentContacts />}
+            {/* {session && <RecentContacts />} */}
 
             {/* Messages display */}
             <div className="max-w-4xl mx-auto space-y-4 mb-8">
@@ -165,7 +183,7 @@ export default function Home() {
             </div>
           </div>
         </main>
-        <SearchBar onSendMessage={callChat} />
+        <SearchBar isAILoading={isAILoading} onSendMessage={callChat} />
       </div>
     </>
   );
