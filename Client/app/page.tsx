@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useMemo } from "react";
-import { useSession, signOut } from "next-auth/react";
+import React, { useState } from "react";
+import { useSession } from "next-auth/react";
 import { LoginButton } from "./components/LoginButton";
 import { useOkto, OktoContextType, BuildType } from "okto-sdk-react";
 import GetButton from "./components/GetButton";
@@ -10,105 +10,87 @@ import AuthButton from "./components/AuthButton";
 import SendRawTransaction from "./components/SendRawTransaction";
 import { RecentContacts } from './components/RecentTransactions';
 import Navbar from "./components/ui/Navbar";
+import SearchBar from "./components/SearchBar";
+import ContactsGrid from "./components/ContactsGrid";
+
+type Message = {
+  id: number;
+  text: string;
+  sender: "user" | "ai";
+};
 
 export default function Home() {
   const { data: session } = useSession();
-  const { apiKey, setApiKey, buildType, setBuildType } = useAppContext();
-  const {
-    isLoggedIn,
-    authenticate,
-    authenticateWithUserId,
-    logOut,
-    getPortfolio,
-    transferTokens,
-    getWallets,
-    createWallet,
-    getSupportedNetworks,
-    getSupportedTokens,
-    getUserDetails,
-    orderHistory,
-    getNftOrderDetails,
-    showWidgetModal,
-    getRawTransactionStatus,
-    transferTokensWithJobStatus,
-    transferNft,
-    transferNftWithJobStatus,
-    executeRawTransaction,
-    executeRawTransactionWithJobStatus,
-    setTheme,
-    getTheme,
-  } = useOkto() as OktoContextType;
-  const idToken = useMemo(() => (session ? session.id_token : null), [session]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
-
-  async function handleAuthenticate(): Promise<any> {
-    if (!idToken) {
-      return { result: false, error: "No google login" };
-    }
-    return new Promise((resolve) => {
-      authenticate(idToken, (result: any, error: any) => {
-        if (result) {
-          console.log("Authentication successful");
-          resolve({ result: true });
-        } else if (error) {
-          console.error("Authentication error:", error);
-          resolve({ result: false, error });
-        }
-      });
-    });
-  }
-
-  async function handleLogout() {
+  const callChat = async (messageToSend: string) => {
     try {
-      logOut();
-      return { result: "logout success" };
-    } catch (error) {
-      return { result: "logout failed" };
-    }
-  }
+      setMessages((prev) => [
+        ...prev,
+        { id: prev.length + 1, text: messageToSend, sender: "user" },
+      ]);
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      console.log("Okto is authenticated");
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: messageToSend }),
+      });
+
+      const data = await response.json();
+      console.log("API Response:", data);
+
+      if (!data.success) {
+        throw new Error(data.error);
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: prev.length + 1,
+          text: data.fullResponse.choices[0].message.content,
+          sender: "ai",
+        },
+      ]);
+
+      if (data.parsedJson) {
+        console.log("Parsed JSON:", data.parsedJson);
+      }
+    } catch (error) {
+      console.error("Error in callChat:", error);
+      // Optionally add error handling UI here
     }
-  }, [isLoggedIn]);
+  };
 
   return (
     <>
     <Navbar/>
-        <main className="flex min-h-screen flex-col items-center space-y-6 p-12 bg-violet-200">
-      {session && <RecentContacts />}
-      <div className="grid grid-cols-2 gap-4 w-full max-w-lg mt-8">
-{/* 
-        <GetButton title="Okto Authenticate" apiFn={handleAuthenticate} />
-        <AuthButton authenticateWithUserId={authenticateWithUserId}/>
-        <GetButton title="Okto Log out" apiFn={handleLogout} />
-        <GetButton title="getPortfolio" apiFn={getPortfolio} />
-        <GetButton title="getSupportedNetworks" apiFn={getSupportedNetworks} />
-        <GetButton title="getSupportedTokens" apiFn={getSupportedTokens} />
-        <GetButton title="getUserDetails" apiFn={getUserDetails} />
-        <GetButton title="getWallets" apiFn={getWallets} />
-        <GetButton title="createWallet" apiFn={createWallet} />
-        <GetButton title="orderHistory" apiFn={() => orderHistory({})} /> */}
-        {/* <GetButton title="getRawTransactionStatus" apiFn={() => getRawTransactionStatus({})} /> */}
-        {/* <GetButton
-          title="getNftOrderDetails"
-          apiFn={() => getNftOrderDetails({})}
-        /> */}
-        {/* <button
-          className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onClick={() => {
-            showWidgetModal();
-          }}
-        >
-          Show Modal
-        </button> */}
-      </div>
-      {/* <div className="flex flex-col gap-2 w-full max-w-lg">
-        <TransferTokens apiFn={transferTokens} />
-        <SendRawTransaction apiFn={executeRawTransaction} />
-      </div> */}
-    </main>
+      
+    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-violet-50/90 via-violet-100/80 to-violet-200/90 backdrop-blur-sm">
+      <main className="flex-1">
+        <div className="h-full p-12">
+        {session && <RecentContacts />}
+
+          {/* Messages display */}
+          <div className="max-w-4xl mx-auto space-y-4 mb-8">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`p-4 rounded-2xl ${
+                  message.sender === "user"
+                    ? "bg-violet-500/90 text-white ml-auto max-w-[80%]"
+                    : "bg-white/10 backdrop-blur-md border border-white/20 max-w-[80%]"
+                }`}
+              >
+                {message.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+      <SearchBar onSendMessage={callChat} />
+    </div>
     </>
   );
 }
