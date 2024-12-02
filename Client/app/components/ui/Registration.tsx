@@ -47,12 +47,16 @@ export function RegistrationForm() {
       if (!response.ok) {
         throw new Error('Registration failed');
       }
+      
 
       // Wait for Google sign-in to complete
       const result = await signIn("google", {
         redirect: false, 
         callbackUrl: '/' 
       });
+
+
+      
 
     } catch (error) {
       console.error('Registration error:', error);

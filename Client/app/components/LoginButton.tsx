@@ -1,18 +1,22 @@
-
-
 "use client";
+import React from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 export function LoginButton() {
   const { data: session } = useSession();
-  const handleSignin = ()=>{
-    if(session){
+
+  const handleSignin = async () => {
+    if (session) {
+      // User is signed in, sign them out
       signOut();
-    }
-    else{
+    } else {
+      // User is not signed in, sign them in
+      
+
+      // Sign in with Google after authorization
       signIn("google");
     }
-  }
+  };
 
   return (
     <div>
