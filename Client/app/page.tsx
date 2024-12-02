@@ -12,6 +12,7 @@ import Navbar from "./components/ui/Navbar";
 import SearchBar from "./components/SearchBar";
 import ContactsGrid from "./components/ContactsGrid";
 import { useAuthStore } from "../store/store";
+import LandingPage from "./components/LandingPage";
 
 type Message = {
   id: number;
@@ -131,10 +132,18 @@ export default function Home() {
     }
   };
 
+  // If not logged in, show landing page
+  if (!session) {
+    return <>
+    <Navbar />
+    <LandingPage />
+    </>;
+  }
+
   return (
     <>
       <Navbar />
-      <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-violet-50/90 via-violet-100/80 to-violet-200/90 backdrop-blur-sm">
+      <div className="h-[40vh] flex flex-col overflow-hidden bg-gradient-to-br from-violet-50/90 via-violet-100/80 to-violet-200/90 backdrop-blur-sm">
         <main className="flex-1">
           <div className="h-full p-12">
             {session && <RecentContacts />}

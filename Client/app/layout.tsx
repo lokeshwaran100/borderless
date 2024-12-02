@@ -9,8 +9,8 @@ import Navbar from "./components/ui/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Okto React SDK",
-  description: "Okto React SDK",
+  title: "Borderless",
+  description: "Borderless and hasslefree transfer of tokens",
 };
 
 export default async function RootLayout({

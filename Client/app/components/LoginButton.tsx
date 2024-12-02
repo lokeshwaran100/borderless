@@ -10,8 +10,7 @@ export function LoginButton() {
       // User is signed in, sign them out
       signOut();
     } else {
-      // User is not signed in, sign them in
-      
+      // User is not signed in, sign them in      
 
       // Sign in with Google after authorization
       signIn("google");
@@ -32,18 +31,16 @@ export function LoginButton() {
   );
 }
 
-export function Button({children}: any) {
-
+export const Button = ({ children, ...props }) => {
   return (
-    <div>
-      <button
-        className={`border rounded px-4 py-2 bg-blue-500 text-white`}
-      >
-        {children}
-      </button>
-    </div>
+    <button
+      {...props}
+      className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+    >
+      {children}
+    </button>
   );
-}
+};
 
 
 
