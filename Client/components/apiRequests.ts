@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Borderless } from "../target/types/borderless";
+// import { Borderless } from "../target/types/borderless";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { AccountLayout, createAssociatedTokenAccount, createMint, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { sleep } from "@raydium-io/raydium-sdk-v2";
@@ -14,18 +14,42 @@ import {
   PoolUtil, IGNORE_CACHE, TickUtil,
 } from "@orca-so/whirlpools-sdk";
 import { TransactionBuilder, resolveOrCreateATA, DecimalUtil, Percentage, Wallet, TransactionBuilderOptions } from "@orca-so/common-sdk";
+import idl from "../../target/idl/borderless.json";
 import dotenv from "dotenv";
 dotenv.config();
 const bs58 = require('bs58');
 
 function getAdminKeypair() {
-    // const adminPrivateKey = new Buffer(process.env.NEXT_ADMIN_PK as string, 'base64').toString('ascii');
+    // const adminPrivateKey = new Buffer(process.env.NEXT_PUBLIC_ADMIN_PK as string, 'base64').toString('ascii');
     const adminPrivateKey = process.env.NEXT_PUBLIC_ADMIN_PK as string
     return anchor.web3.Keypair.fromSecretKey(bs58.decode(adminPrivateKey));
 }
 
+const adminKeypair = getAdminKeypair();
+const adminPublicKey = adminKeypair.publicKey;
+
 function getProgramId() {
     return new anchor.web3.PublicKey(process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as string);
+}
+
+const getConnection = () => {
+  const connection = new anchor.web3.Connection(
+      "https://api.devnet.solana.com",
+      "confirmed"
+  );
+  return connection;
+};
+
+function getProgram() {
+  const connection = getConnection();
+  const programId = getProgramId();
+  const wallet = new anchor.Wallet(adminKeypair);
+  const provider = new anchor.AnchorProvider(connection, wallet, { preflightCommitment: "processed" });
+  const program = new anchor.Program(
+    JSON.parse(JSON.stringify(idl)),
+    provider,
+  );
+  return program;
 }
 
 function getBorderlessStatePda(programId: PublicKey) {
@@ -44,9 +68,7 @@ const ORCA_WHIRLPOOL_PROGRAM_ID = new anchor.web3.PublicKey("whirLbMiicVdio4qvUf
 const ORCA_WHIRLPOOLS_CONFIG = new anchor.web3.PublicKey("FcrweFY1G9HJAHG5inkGB6pKg1HZ6x9UC2WioAfWrGkR");
 const SOL = {mint: new PublicKey("So11111111111111111111111111111111111111112"), decimals: 9};
 const USDC = {mint: new PublicKey("BRjpCHtyQLNCo8gqRUr8jtdAj5AjPYQaoqbvcZiHok1k"), decimals: 6};
-
-const adminKeypair = getAdminKeypair();
-const adminPublicKey = adminKeypair.publicKey;
+const program = getProgram();
 
 export async function initialize(program: anchor.Program) {
     const platformTokenAccount = await createAndGetTokenAccount(
@@ -85,7 +107,7 @@ export async function initialize(program: anchor.Program) {
   }
 
   export async function transferDirect(
-    program: anchor.Program, 
+    // program: anchor.Program, 
     senderPublicKey: PublicKey,
     receiverPublicKey: PublicKey,
     amount: number,
@@ -133,7 +155,7 @@ export async function initialize(program: anchor.Program) {
   }
 
   export async function transferWithSwap(
-    program: anchor.Program, 
+    // program: anchor.Program, 
     senderPublicKey: PublicKey,
     receiverPublicKey: PublicKey,
     amount: number,
