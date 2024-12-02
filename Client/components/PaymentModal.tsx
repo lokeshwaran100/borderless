@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { OktoContextType, useOkto } from 'okto-sdk-react';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -14,9 +15,18 @@ export function PaymentModal({ isOpen, onClose, userId }: PaymentModalProps) {
   const [blockchain, setBlockchain] = useState('Ethereum');
   const [amount, setAmount] = useState('');
   const { data: session } = useSession();
+  const { executeRawTransaction, getWallets } = useOkto() as OktoContextType;
+  
+  const [senderToken, setSenderToken] = useState("USDC");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Trace 1")
+    const wallets = await getWallets();
+    wallets.wallets.entries().map((wallet, index) => {
+      console.log(wallet)
+    })
+
     
     try {
       const response = await fetch('/api/transactions', {
