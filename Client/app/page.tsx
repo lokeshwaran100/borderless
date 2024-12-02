@@ -1,5 +1,5 @@
 "use client";
-import React, { useState,useMemo,useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { LoginButton } from "./components/LoginButton";
 import GetButton from "./components/GetButton";
@@ -11,6 +11,7 @@ import { RecentContacts } from './components/RecentTransactions';
 import Navbar from "./components/ui/Navbar";
 import SearchBar from "./components/SearchBar";
 import ContactsGrid from "./components/ContactsGrid";
+import { useAuthStore } from "../store/store";
 
 type Message = {
   id: number;
@@ -20,32 +21,31 @@ type Message = {
 
 export default function Home() {
   const { data: session } = useSession();
-  const [authToken,setAuthToken]=useState<string>();
   const [messages, setMessages] = useState<Message[]>([]);
   const idToken = useMemo(() => (session?.id_token || null), [session]);
+  const setAuthToken = useAuthStore((state) => state.setAuthToken);
 
   useEffect(() => {
     const fetchAuthorization = async () => {
       if (session) {
-        console.log(idToken); // Log the id_token for debugging
+        console.log(idToken);
 
         try {
           const response = await fetch("https://sandbox-api.okto.tech/api/v2/authenticate", {
             method: 'POST',
             headers: {
-              "X-Api-Key": "e9ff25cc-46f3-4d3b-a37e-991558acf41c"|| '',
+              "X-Api-Key": "e9ff25cc-46f3-4d3b-a37e-991558acf41c" || '',
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              id_token:idToken, // Pass the id_token in the request body
+              id_token: idToken,
             }),
           });
 
           const data = await response.json();
           console.log("Authorization Response:", data);
-          setAuthToken(data.data.auth_token)
+          setAuthToken(data.data.auth_token);
 
-          // Handle the response as needed
         } catch (error) {
           console.error("Error during authorization:", error);
         }
@@ -53,7 +53,7 @@ export default function Home() {
     };
 
     fetchAuthorization();
-  }, [session])
+  }, [session, idToken]);
 
   const callChat = async (messageToSend: string) => {
     try {

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { Wallet2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { signIn } from 'next-auth/react';
+import { useAuthStore } from '@/store/store';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -28,6 +29,7 @@ export function RegistrationForm() {
       recieveToken: 'USDC',
     },
   });
+  const authToken = useAuthStore((state) => state.authToken);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
