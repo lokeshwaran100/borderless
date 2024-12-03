@@ -46,7 +46,7 @@ export function SearchBar() {
   };
 
   return (
-    <div className="relative w-96">
+    <div className="relative w-96 ">
       <div className="relative">
         <input
           type="text"
@@ -59,7 +59,7 @@ export function SearchBar() {
       </div>
 
       {showDropdown && users.length > 0 && (
-        <div className="absolute w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto z-50">
+        <div className="absolute w-full mt-1 bg-white rounded-md shadow-lg max-h-60 overflow-auto z-100">
           {users.map((user) => (
             <div
               key={user._id}

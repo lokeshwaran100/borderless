@@ -66,12 +66,12 @@ export function RegistrationForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md ">
       <CardHeader className="space-y-1">
         <div className="flex items-center justify-center mb-4">
           <Wallet2 className="h-12 w-12 text-primary" />
         </div>
-        <CardTitle className="text-2xl text-center">Welcome to PayApp</CardTitle>
+        <CardTitle className="text-2xl text-center">Welcome to Borderless</CardTitle>
         <CardDescription className="text-center">
           Enter your details to get started
         </CardDescription>

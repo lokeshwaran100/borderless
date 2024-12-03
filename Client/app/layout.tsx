@@ -35,8 +35,8 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 const inter = Inter({ subsets: ["latin"] });
 
 const metadata: Metadata = {
-  title: "Okto React SDK",
-  description: "Okto React SDK",
+  title: "Borderless",
+  description: "Borderless and hasslefree transfer of tokens",
 };
 
 export default function RootLayout({
